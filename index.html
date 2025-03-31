@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tableau GPT Assistant</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 8px; width: 100%; margin-top: 10px; }
+    #response { margin-top: 20px; background: #f4f4f4; padding: 15px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h3>Ask About Your Data</h3>
+  <input type="text" id="query" placeholder="e.g., What were top regions last month?" />
+  <button onclick="askGPT()">Ask GPT</button>
+  <div id="response"></div>
+
+  <script>
+    async function askGPT() {
+      const query = document.getElementById("query").value;
+      const resDiv = document.getElementById("response");
+      resDiv.innerHTML = "Thinking...";
+
+      const res = await fetch("https://runtime.sagemaker.eu-central-1.amazonaws.com/endpoints/gpt-api-endpoint/invocations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+      });
+
+      const data = await res.json();
+      resDiv.innerText = data.response || "No response from GPT.";
+    }
+  </script>
+</body>
+</html>
+
