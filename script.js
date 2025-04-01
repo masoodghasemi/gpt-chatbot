@@ -3,6 +3,7 @@ let worksheetMap = {};
 
 document.addEventListener("DOMContentLoaded", () => {
   tableau.extensions.initializeAsync().then(() => {
+    console.log("✅ Tableau Extensions initialized");
     populateWorksheetDropdown();
 
     document.getElementById("ask-button").addEventListener("click", async () => {
@@ -32,7 +33,7 @@ function populateWorksheetDropdown() {
   });
 
   selectedWorksheet = worksheets[0]?.name;
-  console.log("🧠 Worksheets loaded:", Object.keys(worksheetMap));
+  console.log("📄 Worksheets loaded:", Object.keys(worksheetMap));
 }
 
 async function handleAskGPT() {
@@ -42,10 +43,14 @@ async function handleAskGPT() {
 
   if (!selectedWorksheet) {
     responseDiv.innerText = "❌ Please select a worksheet.";
+    console.warn("❌ No worksheet selected.");
     return;
   }
 
   try {
+    console.log("📤 Query:", query);
+    console.log("📋 Selected worksheet:", selectedWorksheet);
+
     const worksheet = worksheetMap[selectedWorksheet];
     const summary = await worksheet.getSummaryDataAsync();
     const columns = summary.columns.map(c => c.fieldName);
@@ -54,7 +59,6 @@ async function handleAskGPT() {
       Object.fromEntries(row.map((cell, i) => [columns[i], cell.formattedValue]))
     );
 
-    console.log("📥 Query:", query);
     console.log("📊 Extracted data:", data.slice(0, 5));
 
     const fullPrompt = `${query}\n\nHere is the current Tableau worksheet data:\n${JSON.stringify(data.slice(0, 50))}`;
@@ -66,6 +70,7 @@ async function handleAskGPT() {
     });
 
     const result = await res.json();
+    console.log("🤖 GPT response:", result);
     responseDiv.innerText = result.response || result.error || "❌ No response from GPT.";
   } catch (err) {
     console.error("❌ GPT call failed:", err);
