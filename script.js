@@ -26,7 +26,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-sdfsdf
-
-sfdfd
-
