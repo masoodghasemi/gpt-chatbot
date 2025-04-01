@@ -20,11 +20,12 @@
       const resDiv = document.getElementById("response");
       resDiv.innerHTML = "Thinking...";
 
-      const res = await fetch("https://runtime.sagemaker.eu-central-1.amazonaws.com/endpoints/gpt-api-endpoint/invocations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
-      });
+      const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ query })
+});
+
 
       const data = await res.json();
       resDiv.innerText = data.response || "No response from GPT.";
