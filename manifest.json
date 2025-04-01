@@ -1,0 +1,19 @@
+{
+  "manifest_version": "1",
+  "name": "GPT Chatbot for Tableau",
+  "namespace": "gptChatbot",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A Tableau extension that connects GPT with live dashboard data.",
+  "email": "your@email.com",
+  "homepage_url": "https://masoodghasemi.github.io/gpt-chatbot/",
+  "source_location": {
+    "https": "https://masoodghasemi.github.io/gpt-chatbot/index.html"
+  },
+  "scopes": ["dashboard"],
+  "extension_id": "gptChatbot",
+  "runtime": {
+    "enable_event_loop": true
+  },
+  "permissions": []
+}
