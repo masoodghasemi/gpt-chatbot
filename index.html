@@ -1,36 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tableau GPT Assistant</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { padding: 8px; width: 100%; margin-top: 10px; }
-    #response { margin-top: 20px; background: #f4f4f4; padding: 15px; border-radius: 6px; }
-  </style>
+  <title>GPT Chatbot for Tableau</title>
+  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h3>Ask About Your Data</h3>
-  <input type="text" id="query" placeholder="e.g., What were top regions last month?" />
-  <button onclick="askGPT()">Ask GPT</button>
-  <div id="response"></div>
+  <div id="chat-container">
+    <h2>Ask GPT About Your Tableau Data</h2>
 
-  <script>
-    async function askGPT() {
-      const query = document.getElementById("query").value;
-      const resDiv = document.getElementById("response");
-      resDiv.innerHTML = "Thinking...";
+    <label for="worksheet-select">Select Worksheet:</label>
+    <select id="worksheet-select"></select>
 
-      const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ query })
-});
+    <input type="text" id="query-input" placeholder="e.g., Which region underperformed?" />
+    <button id="ask-button">Ask GPT</button>
 
-
-      const data = await res.json();
-      resDiv.innerText = data.response || "No response from GPT.";
-    }
-  </script>
+    <div id="response"></div>
+  </div>
 </body>
 </html>
-
