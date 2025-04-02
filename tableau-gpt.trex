@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <ExtensionManifest xmlns="http://tableau.com/api">
   <Name>GPT Chatbot for Tableau</Name>
-  <Author>Your Name</Author>
-  <Description>Extension that lets users chat with GPT using dashboard data.</Description>
+  <Author>Masood Ghasemi</Author>
+  <Description>Ask GPT questions using dashboard data</Description>
   <HomepageUrl>https://masoodghasemi.github.io/gpt-chatbot/</HomepageUrl>
   <Version>1.0.0</Version>
   <ScriptUri>https://masoodghasemi.github.io/gpt-chatbot/index.html</ScriptUri>
@@ -10,7 +10,7 @@
   <Locale>
     <LocaleID>en_US</LocaleID>
     <Name>GPT Chatbot for Tableau</Name>
-    <Description>Extension that lets users chat with GPT using dashboard data.</Description>
+    <Description>Ask GPT questions using dashboard data</Description>
   </Locale>
   <RequiredPermissions>
     <Permission>datasources</Permission>
