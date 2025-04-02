@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ask GPT</title>
+  <title>GPT Chatbot for Tableau</title>
+  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
   <script defer src="script.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="chat-container">
     <h2>Ask GPT</h2>
-    <input type="text" id="query-input" placeholder="e.g., forecast by year?" />
+    <input type="text" id="query-input" placeholder="e.g., What’s the trend for Sales?" />
     <button id="ask-button">Ask GPT</button>
     <div id="response">Awaiting input...</div>
   </div>
