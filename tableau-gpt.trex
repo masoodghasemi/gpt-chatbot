@@ -4,8 +4,8 @@
   <Name>GPT Chatbot for Tableau</Name>
   <Author>
     <Name>Masood Ghasemi</Name>
-    <Email>masood@example.com</Email>
-    <Organization>Your Company</Organization>
+    <Email>masood.ghasemi@roche.com</Email>
+    <Organization>Roche</Organization>
   </Author>
   <Description>Ask GPT questions using dashboard data</Description>
   <HomepageUrl>https://masoodghasemi.github.io/gpt-chatbot/</HomepageUrl>
