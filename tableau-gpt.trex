@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ExtensionManifest xmlns="http://tableau.com/api/extension_manifest_1_0.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ExtensionManifest xmlns="http://tableau.com/api/extension_manifest">
   <Version>1.0.0</Version>
   <Name>GPT Chatbot for Tableau</Name>
   <Author>
@@ -7,7 +7,7 @@
     <Email>masood.ghasemi@roche.com</Email>
     <Organization>Roche</Organization>
   </Author>
-  <Description>Ask GPT questions using dashboard data</Description>
+  <Description>Chatbot that lets users ask GPT questions using Tableau data</Description>
   <HomepageUrl>https://masoodghasemi.github.io/gpt-chatbot/</HomepageUrl>
   <SourceLocation>
     <Url>https://masoodghasemi.github.io/gpt-chatbot/index.html</Url>
@@ -15,8 +15,8 @@
   <DefaultLocale>en_US</DefaultLocale>
   <Locale>
     <LocaleID>en_US</LocaleID>
-    <Name>GPT Chatbot</Name>
-    <Description>Extension that connects Tableau to GPT</Description>
+    <Name>GPT Chatbot for Tableau</Name>
+    <Description>Chatbot that answers data questions using GPT</Description>
   </Locale>
   <Permissions>
     <Permission>datasources</Permission>
