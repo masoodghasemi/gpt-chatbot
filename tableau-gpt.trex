@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ExtensionManifest xmlns="http://tableau.com/api/extension_manifest">
   <Version>1.0</Version>
-  <Name>GPT Chatbot</Name>
+  <Name>GPT Chatbot for Tableau</Name>
   <Author>
     <Name>Masood Ghasemi</Name>
     <Email>masood.ghasemi@roche.com</Email>
     <Organization>Roche</Organization>
   </Author>
-  <Description>Chatbot that connects GPT with Tableau data</Description>
+  <Description>Chatbot that lets users ask GPT questions using Tableau data</Description>
   <HomepageUrl>https://masoodghasemi.github.io/gpt-chatbot/</HomepageUrl>
   <SourceLocation>
     <Url>https://masoodghasemi.github.io/gpt-chatbot/index.html</Url>
