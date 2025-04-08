@@ -1,8 +1,18 @@
-document.addEventListener("DOMContentLoaded", () => {
-  tableau.extensions.initializeAsync().then(() => {
-    document.getElementById("ask-button").addEventListener("click", async () => {
+(async function () {
+  try {
+    await tableau.extensions.initializeAsync();
+
+    const askBtn = document.getElementById("ask-button");
+    if (!askBtn) {
+      console.error("❌ Ask button not found. DOM may not be fully loaded.");
+      document.body.innerHTML = "❌ Failed to load extension UI. Please refresh.";
+      return;
+    }
+
+    askBtn.addEventListener("click", async () => {
       const query = document.getElementById("query-input").value.trim();
       const responseDiv = document.getElementById("response");
+
       if (!query) {
         responseDiv.innerText = "❌ Please enter a question.";
         return;
@@ -18,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
           Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
         );
 
-        const fullPrompt = `${query}\n\nData:\n${JSON.stringify(data.slice(0, 30))}`;
+        const fullPrompt = `${query}\n\nHere is the worksheet data:\n${JSON.stringify(data.slice(0, 30))}`;
 
         const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
           method: "POST",
@@ -33,5 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
         responseDiv.innerText = "❌ GPT call failed: " + err.message;
       }
     });
-  });
-});
+  } catch (e) {
+    console.error("❌ Tableau Extensions API failed to initialize:", e);
+    document.body.innerHTML = "❌ Failed to load Tableau extension. Check console for errors.";
+  }
+})();
