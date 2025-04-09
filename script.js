@@ -60,3 +60,4 @@ console.log("✅ script.js loaded");
     document.body.innerHTML = "<p style='color:red'>❌ Failed to load Tableau extension.<br>" + err.message + "</p>";
   }
 })();
+
