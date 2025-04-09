@@ -2,11 +2,7 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <!-- Tableau Extensions API MUST load first and MUST be absolute -->
   <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
-
-  <!-- Load your script AFTER Tableau's -->
-  <script defer src="https://masoodghasemi.github.io/gpt-chatbot/script.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
 <body>
@@ -16,5 +12,26 @@
     <button id="ask-button">Ask GPT</button>
     <div id="response">Awaiting input...</div>
   </div>
+
+  <!-- ✅ Wait and then load your logic file -->
+  <script>
+    function loadScript(src) {
+      const s = document.createElement('script');
+      s.src = src;
+      s.defer = true;
+      document.body.appendChild(s);
+    }
+
+    if (typeof tableau === "undefined") {
+      const poll = setInterval(() => {
+        if (typeof tableau !== "undefined") {
+          clearInterval(poll);
+          loadScript("https://masoodghasemi.github.io/gpt-chatbot/script.js");
+        }
+      }, 100);
+    } else {
+      loadScript("https://masoodghasemi.github.io/gpt-chatbot/script.js");
+    }
+  </script>
 </body>
 </html>
