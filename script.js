@@ -1,15 +1,10 @@
 (async function () {
   try {
     await tableau.extensions.initializeAsync();
+    console.log("✅ Tableau extension initialized");
 
     const askBtn = document.getElementById("ask-button");
-    if (!askBtn) {
-      console.error("❌ Ask button not found. DOM may not be fully loaded.");
-      document.body.innerHTML = "❌ Failed to load extension UI. Please refresh.";
-      return;
-    }
-
-    askBtn.addEventListener("click", async () => {
+    askBtn?.addEventListener("click", async () => {
       const query = document.getElementById("query-input").value.trim();
       const responseDiv = document.getElementById("response");
 
@@ -43,8 +38,8 @@
         responseDiv.innerText = "❌ GPT call failed: " + err.message;
       }
     });
-  } catch (e) {
-    console.error("❌ Tableau Extensions API failed to initialize:", e);
-    document.body.innerHTML = "❌ Failed to load Tableau extension. Check console for errors.";
+  } catch (err) {
+    console.error("❌ Extension failed to initialize:", err);
+    document.body.innerHTML = "❌ Failed to load Tableau extension.";
   }
 })();
