@@ -10,7 +10,7 @@ console.log("✅ script.js loaded");
     const responseDiv = document.getElementById("response");
 
     if (!askBtn || !queryInput || !responseDiv) {
-      console.error("❌ One or more DOM elements missing.");
+      console.error("❌ Missing DOM elements.");
       return;
     }
 
@@ -27,7 +27,7 @@ console.log("✅ script.js loaded");
       try {
         const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
         const summary = await worksheet.getSummaryDataAsync();
-        const cols = summary.columns.map(col => col.fieldName);
+        const cols = summary.columns.map(c => c.fieldName);
         const data = summary.data.map(row =>
           Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
         );
@@ -56,7 +56,7 @@ console.log("✅ script.js loaded");
       }
     });
   } catch (err) {
-    console.error("❌ Tableau extension failed to initialize:", err);
-    document.body.innerHTML = "<p style='color:red'>❌ Tableau Extension initialization failed.<br>" + err.message + "</p>";
+    console.error("❌ Tableau Extension failed to initialize:", err);
+    document.body.innerHTML = "<p style='color:red'>❌ Failed to load Tableau extension.<br>" + err.message + "</p>";
   }
 })();
