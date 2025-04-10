@@ -1,6 +1,13 @@
 console.log("✅ script.js loaded");
 
 (async function () {
+  // 👉 If we're not in Tableau, don't run the extension logic
+  if (typeof tableau === "undefined") {
+    console.warn("⚠️ Not running inside Tableau — skipping extension initialization.");
+    document.getElementById("response").innerText = "⚠️ Load this extension in Tableau to use GPT.";
+    return;
+  }
+
   try {
     await tableau.extensions.initializeAsync();
     console.log("✅ Tableau Extensions API initialized");
@@ -10,7 +17,7 @@ console.log("✅ script.js loaded");
     const responseDiv = document.getElementById("response");
 
     if (!askBtn || !queryInput || !responseDiv) {
-      console.error("❌ Missing DOM elements.");
+      console.error("❌ Missing required DOM elements.");
       return;
     }
 
@@ -51,13 +58,12 @@ console.log("✅ script.js loaded");
 
         responseDiv.innerText = result.response || result.error || "❌ No response from GPT.";
       } catch (err) {
-        console.error("❌ GPT fetch failed:", err);
+        console.error("❌ GPT call failed:", err);
         responseDiv.innerText = "❌ GPT call failed: " + err.message;
       }
     });
   } catch (err) {
-    console.error("❌ Tableau Extension failed to initialize:", err);
+    console.error("❌ Tableau extension failed to initialize:", err);
     document.body.innerHTML = "<p style='color:red'>❌ Failed to load Tableau extension.<br>" + err.message + "</p>";
   }
 })();
-
