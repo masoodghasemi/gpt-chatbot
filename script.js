@@ -1,22 +1,22 @@
 console.log("✅ script.js loaded");
 
-window.onload = async function () {
+document.addEventListener("DOMContentLoaded", () => {
   if (typeof tableau === "undefined") {
     console.warn("⚠️ Not running inside Tableau — skipping extension logic.");
-    document.getElementById("response").innerText = "⚠️ Load this extension in Tableau to use GPT.";
+    const response = document.getElementById("response");
+    if (response) response.innerText = "⚠️ Load this extension in Tableau to use GPT.";
     return;
   }
 
-  try {
-    await tableau.extensions.initializeAsync();
-    console.log("✅ Tableau extension initialized");
+  tableau.extensions.initializeAsync().then(() => {
+    console.log("✅ Tableau Extensions API initialized");
 
     const askBtn = document.getElementById("ask-button");
     const queryInput = document.getElementById("query-input");
     const responseDiv = document.getElementById("response");
 
     if (!askBtn || !queryInput || !responseDiv) {
-      console.error("❌ Missing required DOM elements.");
+      console.error("❌ Missing DOM elements");
       return;
     }
 
@@ -42,7 +42,7 @@ window.onload = async function () {
       }
 
       responseDiv.innerText = "Thinking...";
-      logToUI(`📥 User query: ${query}`);
+      logToUI(`📥 Query: ${query}`);
 
       try {
         const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
@@ -73,8 +73,8 @@ window.onload = async function () {
         responseDiv.innerText = "❌ GPT call failed: " + err.message;
       }
     });
-  } catch (err) {
-    console.error("❌ Tableau extension init failed:", err);
+  }).catch(err => {
+    console.error("❌ Extension init failed:", err);
     document.body.innerHTML = `<p style="color:red">❌ Failed to load Tableau extension.<br>${err.message}</p>`;
-  }
-};
+  });
+});
