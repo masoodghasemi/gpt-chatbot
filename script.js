@@ -1,6 +1,6 @@
 console.log("✅ script.js loaded");
 
-(async function () {
+window.onload = async function () {
   if (typeof tableau === "undefined") {
     console.warn("⚠️ Not running inside Tableau — skipping extension logic.");
     document.getElementById("response").innerText = "⚠️ Load this extension in Tableau to use GPT.";
@@ -21,22 +21,19 @@ console.log("✅ script.js loaded");
     }
 
     askBtn.addEventListener("click", async () => {
-      // ✅ Open debug window at start of user interaction
       const debugWindow = window.open("about:blank", "_blank");
       if (debugWindow) {
         debugWindow.document.write("<pre id='log'>🛠️ Debug window opened. Waiting for logs...</pre>");
       }
 
-      // Log helper
-      function logToUI(message) {
-        const div = document.getElementById("response");
-        if (div) div.innerText += `\n${message}`;
+      const logToUI = (msg) => {
+        responseDiv.innerText += `\n${msg}`;
         if (debugWindow) {
           const pre = debugWindow.document.getElementById("log");
-          if (pre) pre.innerText += `\n${message}`;
+          if (pre) pre.innerText += `\n${msg}`;
         }
-        console.log(message);
-      }
+        console.log(msg);
+      };
 
       const query = queryInput.value.trim();
       if (!query) {
@@ -55,7 +52,7 @@ console.log("✅ script.js loaded");
           Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
         );
 
-        logToUI(`📊 Worksheet data (preview): ${JSON.stringify(data.slice(0, 3))}`);
+        logToUI(`📊 Data preview: ${JSON.stringify(data.slice(0, 3))}`);
 
         const fullPrompt = `${query}\n\nHere is the worksheet data:\n${JSON.stringify(data.slice(0, 30))}`;
 
@@ -65,12 +62,10 @@ console.log("✅ script.js loaded");
           body: JSON.stringify({ query: fullPrompt })
         });
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status} ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const result = await res.json();
-        logToUI("🤖 GPT response: " + (result.response || result.error || "❌ No response."));
+        logToUI(`🤖 GPT response: ${result.response || result.error || "❌ No response"}`);
 
         responseDiv.innerText = result.response || result.error || "❌ No response from GPT.";
       } catch (err) {
@@ -79,7 +74,7 @@ console.log("✅ script.js loaded");
       }
     });
   } catch (err) {
-    console.error("❌ Tableau extension failed to initialize:", err);
-    document.body.innerHTML = `<p style='color:red'>❌ Failed to load Tableau extension.<br>${err.message}</p>`;
+    console.error("❌ Tableau extension init failed:", err);
+    document.body.innerHTML = `<p style="color:red">❌ Failed to load Tableau extension.<br>${err.message}</p>`;
   }
-})();
+};
