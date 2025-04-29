@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const askBtn = document.getElementById("ask-button");
   const queryInput = document.getElementById("query-input");
   const responseDiv = document.getElementById("response");
+  if (responseDiv) responseDiv.innerText += "\n✅ script.js ran";
 
   function logToUI(msg) {
     if (responseDiv) {
