@@ -2,9 +2,8 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <!-- Load Tableau Extensions API -->
+  <!-- ✅ Use stable Tableau Extensions API CDN -->
   <script src="https://cdn.jsdelivr.net/npm/tableau-api@1.13.0/tableau.extensions.min.js"></script>
-  <!-- Load CSS from GitHub Pages -->
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
 <body>
@@ -15,21 +14,20 @@
     <div id="response">Awaiting input...</div>
   </div>
 
-  <!-- ✅ Dynamic script loader with logging -->
+  <!-- ✅ Dynamically load script.js once Tableau + DOM are ready -->
   <script>
     function loadScript(src) {
       const s = document.createElement("script");
       s.src = src;
       s.defer = true;
-      s.onload = () => console.log("✅ script.js successfully loaded.");
-      s.onerror = () => console.error("❌ Failed to load script.js.");
+      s.onload = () => console.log("✅ script.js loaded");
+      s.onerror = () => console.error("❌ script.js failed to load");
       document.body.appendChild(s);
     }
 
     const poll = setInterval(() => {
       if (typeof tableau !== "undefined" && document.readyState === "complete") {
         clearInterval(poll);
-        console.log("✅ Tableau API and DOM ready. Loading script.js...");
         loadScript("https://masoodghasemi.github.io/gpt-chatbot/script.js");
       }
     }, 100);
