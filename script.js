@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const askBtn = document.getElementById("ask-button");
   const queryInput = document.getElementById("query-input");
   const responseDiv = document.getElementById("response");
-  if (responseDiv) responseDiv.innerText += "\n✅ script.js ran";
 
   function logToUI(msg) {
     if (responseDiv) {
@@ -11,15 +10,15 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(msg);
   }
 
-  logToUI("✅ script.js loaded and DOMContentLoaded triggered");
+  logToUI("✅ script.js loaded inside Tableau");
 
   if (!askBtn || !queryInput || !responseDiv) {
-    logToUI("❌ Missing required elements.");
+    logToUI("❌ DOM elements not found");
     return;
   }
 
   askBtn.addEventListener("click", async () => {
-    logToUI("🟢 Button clicked");
+    logToUI("🟢 Ask GPT button clicked");
 
     const query = queryInput.value.trim();
     if (!query) {
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const result = await res.json();
 
-      logToUI("🤖 GPT says: " + result.response);
+      logToUI("🤖 GPT says: " + (result.response || result.error || "❌ No response"));
       responseDiv.innerText = result.response || "❌ No response.";
     } catch (err) {
       logToUI("❌ Fetch error: " + err.message);
