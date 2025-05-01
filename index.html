@@ -16,54 +16,69 @@
 
   <!-- ✅ Inline script.js to avoid GitHub Pages loading issues -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const askBtn = document.getElementById("ask-button");
-      const queryInput = document.getElementById("query-input");
-      const responseDiv = document.getElementById("response");
+document.addEventListener("DOMContentLoaded", () => {
+  const askBtn = document.getElementById("ask-button");
+  const queryInput = document.getElementById("query-input");
+  const responseDiv = document.getElementById("response");
 
-      function logToUI(msg) {
-        if (responseDiv) {
-          responseDiv.innerText += "\\n" + msg;
-        }
-        console.log(msg);
-      }
+  function logToUI(msg) {
+    if (responseDiv) {
+      responseDiv.innerText += "\\n" + msg;
+    }
+    console.log(msg);
+  }
 
-      logToUI("✅ inline script.js loaded");
+  logToUI("✅ inline script.js loaded");
 
-      if (!askBtn || !queryInput || !responseDiv) {
-        logToUI("❌ Missing DOM elements");
-        return;
-      }
+  if (!askBtn || !queryInput || !responseDiv) {
+    logToUI("❌ DOM elements not found");
+    return;
+  }
 
-      askBtn.addEventListener("click", async () => {
-        logToUI("🟢 Ask GPT clicked");
+  askBtn.addEventListener("click", async () => {
+    logToUI("🟢 Ask GPT clicked");
 
-        const query = queryInput.value.trim();
-        if (!query) {
-          responseDiv.innerText = "❌ Please enter a question.";
-          return;
-        }
+    const query = queryInput.value.trim();
+    if (!query) {
+      responseDiv.innerText = "❌ Please enter a question.";
+      return;
+    }
 
-        responseDiv.innerText = "Thinking...";
-        logToUI("📥 Query: " + query);
+    responseDiv.innerText = "Thinking...";
+    logToUI("📥 Query: " + query);
 
-        try {
-          const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query })
-          });
+    try {
+      await tableau.extensions.initializeAsync();
 
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const result = await res.json();
-          logToUI("🤖 GPT says: " + result.response);
-          responseDiv.innerText = result.response || "❌ No response.";
-        } catch (err) {
-          logToUI("❌ Fetch error: " + err.message);
-          responseDiv.innerText = "❌ GPT call failed.";
-        }
+      const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
+      const summary = await worksheet.getSummaryDataAsync();
+
+      const cols = summary.columns.map(col => col.fieldName);
+      const data = summary.data.map(row =>
+        Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
+      );
+
+      logToUI("📊 Loaded Tableau data (" + data.length + " rows)");
+
+      const fullPrompt = `${query}\n\nHere is the data from Tableau:\n${JSON.stringify(data.slice(0, 30), null, 2)}`;
+
+      const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: fullPrompt })
       });
-    });
-  </script>
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const result = await res.json();
+
+      logToUI("🤖 GPT says: " + result.response);
+      responseDiv.innerText = result.response || "❌ No response.";
+    } catch (err) {
+      logToUI("❌ Error: " + err.message);
+      responseDiv.innerText = "❌ GPT call failed.";
+    }
+  });
+});
+</script>
 </body>
 </html>
