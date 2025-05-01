@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <!-- ✅ Use stable Tableau Extensions API CDN -->
+  <!-- Load Tableau Extensions API from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/tableau-api@1.13.0/tableau.extensions.min.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
@@ -14,23 +14,56 @@
     <div id="response">Awaiting input...</div>
   </div>
 
-  <!-- ✅ Dynamically load script.js once Tableau + DOM are ready -->
+  <!-- ✅ Inline script.js to avoid GitHub Pages loading issues -->
   <script>
-    function loadScript(src) {
-      const s = document.createElement("script");
-      s.src = src;
-      s.defer = true;
-      s.onload = () => console.log("✅ script.js loaded");
-      s.onerror = () => console.error("❌ script.js failed to load");
-      document.body.appendChild(s);
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+      const askBtn = document.getElementById("ask-button");
+      const queryInput = document.getElementById("query-input");
+      const responseDiv = document.getElementById("response");
 
-    const poll = setInterval(() => {
-      if (typeof tableau !== "undefined" && document.readyState === "complete") {
-        clearInterval(poll);
-        loadScript("https://masoodghasemi.github.io/gpt-chatbot/script.js");
+      function logToUI(msg) {
+        if (responseDiv) {
+          responseDiv.innerText += "\\n" + msg;
+        }
+        console.log(msg);
       }
-    }, 100);
+
+      logToUI("✅ inline script.js loaded");
+
+      if (!askBtn || !queryInput || !responseDiv) {
+        logToUI("❌ Missing DOM elements");
+        return;
+      }
+
+      askBtn.addEventListener("click", async () => {
+        logToUI("🟢 Ask GPT clicked");
+
+        const query = queryInput.value.trim();
+        if (!query) {
+          responseDiv.innerText = "❌ Please enter a question.";
+          return;
+        }
+
+        responseDiv.innerText = "Thinking...";
+        logToUI("📥 Query: " + query);
+
+        try {
+          const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query })
+          });
+
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          const result = await res.json();
+          logToUI("🤖 GPT says: " + result.response);
+          responseDiv.innerText = result.response || "❌ No response.";
+        } catch (err) {
+          logToUI("❌ Fetch error: " + err.message);
+          responseDiv.innerText = "❌ GPT call failed.";
+        }
+      });
+    });
   </script>
 </body>
 </html>
