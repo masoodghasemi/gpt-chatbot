@@ -77,10 +77,10 @@
           logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
           logToUI("📈 Total rows: " + data.length);
         } catch (err) {
-          logToUI("❌ Error accessing worksheet data: " + err.message);
-          responseDiv.innerText = "❌ Failed to read worksheet data.";
-          return;
-        }
+  logToUI("❌ getSummaryDataAsync() failed: " + err.message);
+  responseDiv.innerText = "❌ Failed to read worksheet data: " + err.message;
+  return;
+}
 
         const fullPrompt = `
 You're helping a Tableau user. They asked:
