@@ -53,9 +53,13 @@
           const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
           const summary = await worksheet.getSummaryDataAsync();
           const cols = summary.columns.map(col => col.fieldName);
+          logToUI("🧩 Columns found: " + cols.join(", "));
+
           const data = summary.data.map(row =>
-            Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
+          Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
           );
+
+          logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
 
           logToUI("📊 Loaded Tableau data (" + data.length + " rows)");
 
