@@ -21,7 +21,7 @@
 
       function logToUI(msg) {
         if (responseDiv) {
-          responseDiv.innerText += "\n" + msg;
+          responseDiv.innerText += "\\n" + msg;
         }
         console.log(msg);
       }
@@ -40,6 +40,8 @@
 
         try {
           await tableau.extensions.initializeAsync();
+          logToUI("✅ Tableau extension initialized");
+
           const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
 
           if (!worksheets || worksheets.length === 0) {
@@ -55,6 +57,8 @@
           logToUI("📄 Using worksheet: " + worksheet.name);
 
           const summary = await worksheet.getSummaryDataAsync();
+          logToUI("✅ Got summary data from Tableau.");
+
           const cols = summary.columns.map(c => c.fieldName);
           const data = summary.data.map(row =>
             Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
@@ -87,7 +91,7 @@ ${JSON.stringify(data.slice(0, 30), null, 2)}
           responseDiv.innerText = result.response || "❌ No response.";
         } catch (err) {
           logToUI("❌ Error: " + err.message);
-          responseDiv.innerText = "❌ Failed to read worksheet data.";
+          responseDiv.innerText = "❌ Failed to read worksheet data: " + err.message;
         }
       });
     });
