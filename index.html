@@ -28,61 +28,59 @@
         console.log(msg);
       }
 
-      logToUI("✅ Inline script loaded");
+      logToUI("✅ DOM loaded. Waiting for Tableau...");
 
-      if (!askBtn || !queryInput || !responseDiv) {
-        logToUI("❌ Missing DOM elements");
-        return;
-      }
+      const waitForTableau = setInterval(() => {
+        if (typeof tableau !== "undefined" && tableau.extensions) {
+          clearInterval(waitForTableau);
+          logToUI("✅ Tableau API is defined");
 
-      askBtn.addEventListener("click", async () => {
-        logToUI("🟢 Ask GPT clicked");
+          tableau.extensions.initializeAsync().then(() => {
+            logToUI("✅ Tableau extension initialized");
 
-        const query = queryInput.value.trim();
-        if (!query) {
-          responseDiv.innerText = "❌ Please enter a question.";
-          return;
-        }
+            askBtn.addEventListener("click", async () => {
+              const query = queryInput.value.trim();
+              if (!query) {
+                responseDiv.innerText = "❌ Please enter a question.";
+                return;
+              }
 
-        responseDiv.innerText = "Thinking...";
-        logToUI("📥 Query: " + query);
+              responseDiv.innerText = "Thinking...";
+              logToUI("📥 Query: " + query);
 
-        let data = [];
-        let cols = [];
+              let data = [];
+              let cols = [];
 
-        try {
-          await tableau.extensions.initializeAsync();
-          logToUI("✅ Tableau extension initialized");
+              try {
+                const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
+                logToUI("📄 Worksheets found: " + worksheets.map(w => w.name).join(", "));
 
-          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-          logToUI("📄 Worksheets found: " + worksheets.map(w => w.name).join(", "));
+                const worksheet = worksheets.find(ws => ws.name === "Sheet 1");
+                if (!worksheet) {
+                  logToUI("❌ Worksheet 'Sheet 1' not found.");
+                  responseDiv.innerText = "❌ Could not find 'Sheet 1'.";
+                  return;
+                }
 
-          const worksheet = worksheets.find(ws => ws.name === "Sheet 1");
-          if (!worksheet) {
-            logToUI("❌ Worksheet 'Sheet 1' not found.");
-            responseDiv.innerText = "❌ Could not find 'Sheet 1'.";
-            return;
-          }
+                logToUI("📄 Using worksheet: " + worksheet.name);
 
-          logToUI("📄 Using worksheet: " + worksheet.name);
+                const summary = await worksheet.getSummaryDataAsync();
+                cols = summary.columns.map(c => c.fieldName);
+                logToUI("🧩 Columns: " + cols.join(", "));
 
-          const summary = await worksheet.getSummaryDataAsync();
-          cols = summary.columns.map(c => c.fieldName);
-          logToUI("🧩 Columns: " + cols.join(", "));
+                data = summary.data.map(row =>
+                  Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
+                );
 
-          data = summary.data.map(row =>
-            Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
-          );
+                logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
+                logToUI("📈 Total rows: " + data.length);
+              } catch (err) {
+                logToUI("❌ getSummaryDataAsync() failed: " + err.message);
+                responseDiv.innerText = "❌ Failed to read worksheet data: " + err.message;
+                return;
+              }
 
-          logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
-          logToUI("📈 Total rows: " + data.length);
-        } catch (err) {
-  logToUI("❌ getSummaryDataAsync() failed: " + err.message);
-  responseDiv.innerText = "❌ Failed to read worksheet data: " + err.message;
-  return;
-}
-
-        const fullPrompt = `
+              const fullPrompt = `
 You're helping a Tableau user. They asked:
 
 "${query}"
@@ -92,27 +90,33 @@ Here is the data from the 'Sheet 1' dashboard worksheet (sample up to 30 rows):
 ${JSON.stringify(data.slice(0, 30), null, 2)}
 
 Please use this data to answer intelligently.
-        `.trim();
+              `.trim();
 
-        logToUI("🧾 Prompt:\n" + fullPrompt);
+              logToUI("🧾 Prompt:\\n" + fullPrompt);
 
-        try {
-          const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: fullPrompt })
+              try {
+                const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ query: fullPrompt })
+                });
+
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const result = await res.json();
+
+                logToUI("🤖 GPT says: " + result.response);
+                responseDiv.innerText = result.response || "❌ No response.";
+              } catch (err) {
+                logToUI("❌ Fetch error: " + err.message);
+                responseDiv.innerText = "❌ GPT call failed.";
+              }
+            });
+          }).catch(err => {
+            logToUI("❌ Tableau initializeAsync() failed: " + err.message);
+            responseDiv.innerText = "❌ Could not initialize Tableau extension.";
           });
-
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          const result = await res.json();
-
-          logToUI("🤖 GPT says: " + result.response);
-          responseDiv.innerText = result.response || "❌ No response.";
-        } catch (err) {
-          logToUI("❌ Fetch error: " + err.message);
-          responseDiv.innerText = "❌ GPT call failed.";
         }
-      });
+      }, 100);
     });
   </script>
 </body>
