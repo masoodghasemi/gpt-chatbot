@@ -2,18 +2,19 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+  <!-- Load Tableau Extensions API from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/tableau-api@1.13.0/tableau.extensions.min.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
-
 <body>
   <div id="chat-container">
     <h2>Ask GPT</h2>
-    <input type="text" id="query-input" placeholder="e.g., Sum of Forecast by Year?" />
+    <input type="text" id="query-input" placeholder="e.g., What’s the trend for Sales?" />
     <button id="ask-button">Ask GPT</button>
     <div id="response">Awaiting input...</div>
   </div>
 
+  <!-- Inline script logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const askBtn = document.getElementById("ask-button");
@@ -27,9 +28,16 @@
         console.log(msg);
       }
 
-      logToUI("✅ Extension script loaded");
+      logToUI("✅ Inline script loaded");
+
+      if (!askBtn || !queryInput || !responseDiv) {
+        logToUI("❌ Missing DOM elements");
+        return;
+      }
 
       askBtn.addEventListener("click", async () => {
+        logToUI("🟢 Ask GPT clicked");
+
         const query = queryInput.value.trim();
         if (!query) {
           responseDiv.innerText = "❌ Please enter a question.";
@@ -41,41 +49,36 @@
 
         try {
           await tableau.extensions.initializeAsync();
-          logToUI("✅ Tableau extension initialized");
 
-          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-
-          if (!worksheets || worksheets.length === 0) {
-            logToUI("❌ No worksheets found in the dashboard.");
-            responseDiv.innerText = "❌ No worksheets found in the dashboard.";
+          // Force target "Sheet 1"
+          const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets.find(ws => ws.name === "Sheet 1");
+          if (!worksheet) {
+            logToUI("❌ Worksheet 'Sheet 1' not found.");
+            responseDiv.innerText = "❌ Could not find 'Sheet 1'.";
             return;
           }
 
-          logToUI("📄 Worksheets available:");
-          worksheets.forEach(ws => logToUI(" - " + ws.name));
-
-          const worksheet = worksheets[0];
-          logToUI("📄 Using worksheet: " + worksheet.name);
-
           const summary = await worksheet.getSummaryDataAsync();
-          logToUI("✅ Got summary data from Tableau.");
+          const cols = summary.columns.map(col => col.fieldName);
+          logToUI("🧩 Columns found: " + cols.join(", "));
 
-          const cols = summary.columns.map(c => c.fieldName);
           const data = summary.data.map(row =>
             Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
           );
 
-          logToUI("🧩 Columns: " + cols.join(", "));
           logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
           logToUI("📈 Total rows: " + data.length);
 
           const fullPrompt = `
-You're helping a Tableau user. They asked:
-"${query}"
+You're assisting a user looking at a Tableau worksheet titled 'Sheet 1'.
 
-Here is the data from worksheet "${worksheet.name}" (up to 30 rows):
+They asked: "${query}"
+
+Here is a sample of the worksheet data (up to 30 rows):
 ${JSON.stringify(data.slice(0, 30), null, 2)}
-`.trim();
+
+Use the column names and values to answer intelligently.
+          `.trim();
 
           logToUI("🧾 Prompt:\n" + fullPrompt);
 
@@ -92,7 +95,7 @@ ${JSON.stringify(data.slice(0, 30), null, 2)}
           responseDiv.innerText = result.response || "❌ No response.";
         } catch (err) {
           logToUI("❌ Error: " + err.message);
-          responseDiv.innerText = "❌ Failed to read worksheet data: " + err.message;
+          responseDiv.innerText = "❌ GPT call failed.";
         }
       });
     });
