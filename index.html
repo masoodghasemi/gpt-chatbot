@@ -14,7 +14,7 @@
     <div id="response">Awaiting input...</div>
   </div>
 
-  <!-- Inline script logic -->
+  <!-- ✅ Inline script.js to avoid GitHub Pages loading issues -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const askBtn = document.getElementById("ask-button");
@@ -28,7 +28,7 @@
         console.log(msg);
       }
 
-      logToUI("✅ Inline script loaded");
+      logToUI("✅ inline script.js loaded");
 
       if (!askBtn || !queryInput || !responseDiv) {
         logToUI("❌ Missing DOM elements");
@@ -48,53 +48,18 @@
         logToUI("📥 Query: " + query);
 
         try {
-          await tableau.extensions.initializeAsync();
-
-          // Force target "Sheet 1"
-          const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets.find(ws => ws.name === "Sheet 1");
-          if (!worksheet) {
-            logToUI("❌ Worksheet 'Sheet 1' not found.");
-            responseDiv.innerText = "❌ Could not find 'Sheet 1'.";
-            return;
-          }
-
-          const summary = await worksheet.getSummaryDataAsync();
-          const cols = summary.columns.map(col => col.fieldName);
-          logToUI("🧩 Columns found: " + cols.join(", "));
-
-          const data = summary.data.map(row =>
-            Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
-          );
-
-          logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
-          logToUI("📈 Total rows: " + data.length);
-
-          const fullPrompt = `
-You're assisting a user looking at a Tableau worksheet titled 'Sheet 1'.
-
-They asked: "${query}"
-
-Here is a sample of the worksheet data (up to 30 rows):
-${JSON.stringify(data.slice(0, 30), null, 2)}
-
-Use the column names and values to answer intelligently.
-          `.trim();
-
-          logToUI("🧾 Prompt:\n" + fullPrompt);
-
           const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query: fullPrompt })
+            body: JSON.stringify({ query })
           });
 
           if (!res.ok) throw new Error("HTTP " + res.status);
           const result = await res.json();
-
           logToUI("🤖 GPT says: " + result.response);
           responseDiv.innerText = result.response || "❌ No response.";
         } catch (err) {
-          logToUI("❌ Error: " + err.message);
+          logToUI("❌ Fetch error: " + err.message);
           responseDiv.innerText = "❌ GPT call failed.";
         }
       });
