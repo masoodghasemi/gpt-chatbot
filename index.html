@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <!-- ✅ Load Tableau Extensions API (correct CDN) -->
+  <!-- ✅ Correct Tableau Extensions API source -->
   <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
@@ -14,7 +14,7 @@
     <div id="response">Awaiting input...</div>
   </div>
 
-  <!-- ✅ Inline script to support GPT + Tableau -->
+  <!-- ✅ GPT + Tableau Extension Logic -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const askBtn = document.getElementById("ask-button");
@@ -28,7 +28,7 @@
         console.log(msg);
       }
 
-      logToUI("✅ Extension loaded and ready");
+      logToUI("✅ Extension script loaded");
 
       askBtn.addEventListener("click", async () => {
         const query = queryInput.value.trim();
@@ -40,40 +40,49 @@
         responseDiv.innerText = "Thinking...";
         logToUI("📥 Query: " + query);
 
-        let worksheetData = "";
+        let data = [];
+        let cols = [];
+        let worksheetName = "";
+
         try {
           await tableau.extensions.initializeAsync();
-          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
+          logToUI("✅ Tableau extension initialized");
 
+          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
           if (!worksheets || worksheets.length === 0) {
-            throw new Error("No worksheets found in the dashboard.");
+            throw new Error("No worksheets found in dashboard.");
           }
 
-          const worksheet = worksheets[0]; // or find by name
-          logToUI("📄 Using worksheet: " + worksheet.name);
+          worksheetName = worksheets[0].name;
+          logToUI("📄 Worksheets found: " + worksheets.map(w => w.name).join(", "));
+          logToUI("📄 Using worksheet: " + worksheetName);
 
-          const summary = await worksheet.getSummaryDataAsync();
-          const cols = summary.columns.map(c => c.fieldName);
-          const data = summary.data.map(row =>
+          const summary = await worksheets[0].getSummaryDataAsync();
+          cols = summary.columns.map(c => c.fieldName);
+          data = summary.data.map(row =>
             Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
           );
 
           logToUI("🧩 Columns: " + cols.join(", "));
           logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
-          worksheetData = `Here is the data from worksheet "${worksheet.name}":\n` +
-                          JSON.stringify(data.slice(0, 30), null, 2);
+          logToUI("📈 Total rows: " + data.length);
         } catch (err) {
-          logToUI("❌ Worksheet fetch error: " + err.message);
-          worksheetData = "[Could not load worksheet data: " + err.message + "]";
+          const msg = "❌ getSummaryDataAsync() failed: " + err.message;
+          logToUI(msg);
+          responseDiv.innerText = msg;
+          return;
         }
 
         const fullPrompt = `
 You're helping a Tableau user. They asked:
+
 "${query}"
 
-${worksheetData}
+Here is the data from worksheet "${worksheetName}" (up to 30 rows):
 
-Use this context to answer intelligently.
+${JSON.stringify(data.slice(0, 30), null, 2)}
+
+Use this data to answer intelligently.
         `.trim();
 
         logToUI("🧾 Prompt:\n" + fullPrompt);
