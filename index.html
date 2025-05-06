@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
-  <!-- Load Tableau Extensions API from CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/tableau-api@1.13.0/tableau.extensions.min.js"></script>
+  <!-- ✅ Load Tableau Extensions API (correct CDN) -->
+  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <div id="response">Awaiting input...</div>
   </div>
 
-  <!-- ✅ Inline script.js to avoid GitHub Pages loading issues -->
+  <!-- ✅ Inline script to support GPT + Tableau -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const askBtn = document.getElementById("ask-button");
@@ -23,21 +23,14 @@
 
       function logToUI(msg) {
         if (responseDiv) {
-          responseDiv.innerText += "\\n" + msg;
+          responseDiv.innerText += "\n" + msg;
         }
         console.log(msg);
       }
 
-      logToUI("✅ inline script.js loaded");
-
-      if (!askBtn || !queryInput || !responseDiv) {
-        logToUI("❌ Missing DOM elements");
-        return;
-      }
+      logToUI("✅ Extension loaded and ready");
 
       askBtn.addEventListener("click", async () => {
-        logToUI("🟢 Ask GPT clicked");
-
         const query = queryInput.value.trim();
         if (!query) {
           responseDiv.innerText = "❌ Please enter a question.";
@@ -47,19 +40,58 @@
         responseDiv.innerText = "Thinking...";
         logToUI("📥 Query: " + query);
 
+        let worksheetData = "";
+        try {
+          await tableau.extensions.initializeAsync();
+          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
+
+          if (!worksheets || worksheets.length === 0) {
+            throw new Error("No worksheets found in the dashboard.");
+          }
+
+          const worksheet = worksheets[0]; // or find by name
+          logToUI("📄 Using worksheet: " + worksheet.name);
+
+          const summary = await worksheet.getSummaryDataAsync();
+          const cols = summary.columns.map(c => c.fieldName);
+          const data = summary.data.map(row =>
+            Object.fromEntries(row.map((cell, i) => [cols[i], cell.formattedValue]))
+          );
+
+          logToUI("🧩 Columns: " + cols.join(", "));
+          logToUI("📊 First row: " + JSON.stringify(data[0] || {}));
+          worksheetData = `Here is the data from worksheet "${worksheet.name}":\n` +
+                          JSON.stringify(data.slice(0, 30), null, 2);
+        } catch (err) {
+          logToUI("❌ Worksheet fetch error: " + err.message);
+          worksheetData = "[Could not load worksheet data: " + err.message + "]";
+        }
+
+        const fullPrompt = `
+You're helping a Tableau user. They asked:
+"${query}"
+
+${worksheetData}
+
+Use this context to answer intelligently.
+        `.trim();
+
+        logToUI("🧾 Prompt:\n" + fullPrompt);
+
         try {
           const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query })
+            body: JSON.stringify({ query: fullPrompt })
           });
 
           if (!res.ok) throw new Error("HTTP " + res.status);
           const result = await res.json();
+
           logToUI("🤖 GPT says: " + result.response);
           responseDiv.innerText = result.response || "❌ No response.";
         } catch (err) {
-          logToUI("❌ Fetch error: " + err.message);
+          logToUI("❌ GPT Fetch error: " + err.message);
           responseDiv.innerText = "❌ GPT call failed.";
         }
       });
