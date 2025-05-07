@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>GPT Chatbot for Tableau</title>
+  <!-- Load Tableau Extensions API -->
   <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
   <link rel="stylesheet" href="https://masoodghasemi.github.io/gpt-chatbot/style.css">
 </head>
@@ -16,7 +17,9 @@
   <script>
     function logToUI(msg) {
       const responseDiv = document.getElementById("response");
-      responseDiv.innerText += "\n" + msg;
+      if (responseDiv) {
+        responseDiv.innerText += "\n" + msg;
+      }
       console.log(msg);
     }
 
@@ -42,9 +45,13 @@
 
         try {
           await tableau.extensions.initializeAsync();
-          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-          const worksheet = worksheets[0];
+          const worksheets = tableau.extensions.dashboardContent?.dashboard?.worksheets;
 
+          if (!worksheets || worksheets.length === 0) {
+            throw new Error("No worksheets found.");
+          }
+
+          const worksheet = worksheets[0]; // Or filter by name if needed
           logToUI("📄 Using worksheet: " + worksheet.name);
 
           const summary = await worksheet.getSummaryDataAsync();
@@ -78,6 +85,7 @@ ${JSON.stringify(data.slice(0, 30), null, 2)}
             body: JSON.stringify({ query: prompt })
           });
 
+          if (!res.ok) throw new Error("HTTP " + res.status);
           const result = await res.json();
           responseDiv.innerText = result.response || "❌ No response.";
           logToUI("🤖 GPT response complete");
@@ -89,16 +97,16 @@ ${JSON.stringify(data.slice(0, 30), null, 2)}
     }
 
     function waitForTableauAndInit() {
-      const check = setInterval(() => {
+      const poll = setInterval(() => {
         if (typeof tableau !== "undefined" && tableau.extensions) {
-          clearInterval(check);
+          clearInterval(poll);
           initGPT();
         }
       }, 100);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      logToUI("✅ Extension loaded. Waiting for Tableau...");
+      logToUI("✅ DOM loaded. Waiting for Tableau...");
       waitForTableauAndInit();
     });
   </script>
