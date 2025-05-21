@@ -1,0 +1,3 @@
+/* 
+  X-Frame-Options: allowall
+  Content-Security-Policy: frame-ancestors 'self' https://*.tableau.com https://tableau
