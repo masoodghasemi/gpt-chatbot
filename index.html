@@ -64,12 +64,15 @@
           const columns = summaryData.columns.map(col => col.fieldName || col.alias || `Col${i}`);
 
           const structuredData = summaryData.data.map(row => {
-            const rowData = {};
+          const rowData = {};
             row.forEach((cell, i) => {
-              rowData[columns[i]] = cell.formattedValue;
-            });
+            let value = cell.formattedValue;
+            // Try parsing as number if it's a number-like string
+              const parsed = parseFloat(value.toString().replace(/,/g, ''));
+              rowData[columns[i]] = isNaN(parsed) ? value : parsed;
+              });
             return rowData;
-          });
+            });
 
           logToUI("📊 Structured Data Sample:\n" + JSON.stringify(structuredData.slice(0, 5), null, 2));
 
