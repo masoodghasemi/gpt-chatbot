@@ -1,74 +1,96 @@
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const askBtn = document.getElementById("ask-button");
-    const queryInput = document.getElementById("query-input");
-    const responseDiv = document.getElementById("response");
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GPT Chatbot for Tableau</title>
+  <script src="https://extensions.tableauusercontent.com/resources/tableau.extensions.1.latest.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #chat-container { max-width: 400px; margin: 0 auto; }
+    input, button { width: 100%; padding: 10px; margin-top: 10px; }
+    #response { margin-top: 20px; white-space: pre-wrap; background: #f9f9f9; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Ask GPT</h2>
+    <input type="text" id="query-input" placeholder="e.g., What’s the trend for Sales?" />
+    <button id="ask-button">Ask GPT</button>
+    <div id="response">Awaiting input...</div>
+  </div>
 
-    function logToUI(msg) {
-      if (responseDiv) {
-        responseDiv.innerText += "\n" + msg;
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const askBtn = document.getElementById("ask-button");
+      const queryInput = document.getElementById("query-input");
+      const responseDiv = document.getElementById("response");
+
+      function logToUI(msg) {
+        if (responseDiv) {
+          responseDiv.innerText += "\\n" + msg;
+        }
+        console.log(msg);
       }
-      console.log(msg);
-    }
 
-    // DEBUG: Check if tableau is available
-    if (typeof tableau === "undefined") {
-      logToUI("❌ DEBUG: Tableau object is NOT defined. Extension not running inside Tableau.");
-      return;
-    } else {
-      logToUI("✅ DEBUG: Tableau object is available.");
-    }
+      logToUI("✅ Extension loaded. Waiting for user input...");
 
-    askBtn.addEventListener("click", async () => {
-      const query = queryInput.value.trim();
-      if (!query) {
-        responseDiv.innerText = "❌ Please enter a question.";
+      if (typeof tableau === "undefined") {
+        logToUI("❌ Tableau Extensions API is not available.");
         return;
       }
 
-      responseDiv.innerText = "Thinking...";
-      logToUI("📥 Query: " + query);
-
-      try {
-        await tableau.extensions.initializeAsync();
-        logToUI("✅ Tableau extension initialized");
-
-        const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-        if (!worksheets || worksheets.length === 0) {
-          throw new Error("No worksheets found in dashboard.");
+      askBtn.addEventListener("click", async () => {
+        const query = queryInput.value.trim();
+        if (!query) {
+          responseDiv.innerText = "❌ Please enter a question.";
+          return;
         }
 
-        const worksheet = worksheets[0]; // Use first worksheet
-        logToUI("📄 Using worksheet: " + worksheet.name);
+        responseDiv.innerText = "Thinking...";
+        logToUI("📥 Query: " + query);
 
-        const summaryData = await worksheet.getSummaryDataAsync();
-        const columns = summaryData.columns.map(col => col.fieldName);
+        try {
+          await tableau.extensions.initializeAsync();
+          logToUI("✅ Tableau extension initialized");
 
-        const structuredData = summaryData.data.map(row => {
-          const rowData = {};
-          row.forEach((cell, i) => {
-            rowData[columns[i]] = cell.formattedValue;
+          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
+          if (!worksheets || worksheets.length === 0) {
+            throw new Error("No worksheets found in dashboard.");
+          }
+
+          const worksheet = worksheets[0];
+          logToUI("📄 Using worksheet: " + worksheet.name);
+
+          const summaryData = await worksheet.getSummaryDataAsync();
+          const columns = summaryData.columns.map(col => col.fieldName || col.alias || `Col${i}`);
+
+          const structuredData = summaryData.data.map(row => {
+            const rowData = {};
+            row.forEach((cell, i) => {
+              rowData[columns[i]] = cell.formattedValue;
+            });
+            return rowData;
           });
-          return rowData;
-        });
 
-        logToUI("📊 Structured Data:\n" + JSON.stringify(structuredData, null, 2));
+          logToUI("📊 Structured Data Sample:\n" + JSON.stringify(structuredData.slice(0, 5), null, 2));
 
-        const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: query,
-            worksheet_data: structuredData
-          })
-        });
+          const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: query,
+              worksheet_data: structuredData
+            })
+          });
 
-        const result = await res.json();
-        responseDiv.innerText = result.response || "❌ GPT returned no response.";
-      } catch (err) {
-        logToUI("❌ Error: " + err.message);
-        responseDiv.innerText = "❌ Failed: " + err.message;
-      }
+          const result = await res.json();
+          responseDiv.innerText = result.response || "❌ GPT returned no response.";
+        } catch (err) {
+          console.error("❌ Caught error:", err);
+          logToUI("❌ Error: " + err.message);
+          responseDiv.innerText = "❌ Something went wrong: " + err.message;
+        }
+      });
     });
-  });
-</script>
+  </script>
+</body>
+</html>
