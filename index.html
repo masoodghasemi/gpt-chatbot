@@ -41,7 +41,7 @@
         logToUI("📄 Using worksheet: " + worksheet.name);
 
         const summaryData = await worksheet.getSummaryDataAsync();
-        const columns = summaryData.columns.map(col => col.fieldName || col.alias || `Col${i}`);
+        const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
 
         const structuredData = summaryData.data.map(row => {
           const rowData = {};
