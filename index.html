@@ -19,16 +19,6 @@
   </div>
 
   <script>
-    function downloadJSON(data, filename = "worksheet_data.json") {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
       const askBtn = document.getElementById("ask-button");
       const queryInput = document.getElementById("query-input");
@@ -36,7 +26,7 @@
 
       function logToUI(msg) {
         if (responseDiv) {
-          responseDiv.innerText += "\n" + msg;
+          responseDiv.innerText += "\\n" + msg;
         }
         console.log(msg);
       }
@@ -71,27 +61,25 @@
           logToUI("📄 Using worksheet: " + worksheet.name);
 
           const summaryData = await worksheet.getSummaryDataAsync();
-          const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
+          const columns = summaryData.columns.map(col => col.fieldName || col.alias || `Col${i}`);
 
           const structuredData = summaryData.data.map(row => {
-            const rowData = {};
+          const rowData = {};
             row.forEach((cell, i) => {
-              const rawValue = cell.formattedValue;
-              const numeric = parseFloat(rawValue.toString().replace(/,/g, ''));
-              rowData[columns[i]] = isNaN(numeric) ? rawValue : numeric;
-            });
+            let value = cell.formattedValue;
+            // Try parsing as number if it's a number-like string
+              const parsed = parseFloat(value.toString().replace(/,/g, ''));
+              rowData[columns[i]] = isNaN(parsed) ? value : parsed;
+              });
             return rowData;
-          });
-
-          downloadJSON(structuredData); // ✅ Trigger JSON export
+            });
 
           const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               query: query,
-              worksheet_data: structuredData,
-              columns: columns
+              worksheet_data: structuredData
             })
           });
 
