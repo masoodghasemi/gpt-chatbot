@@ -66,11 +66,9 @@
           const structuredData = summaryData.data.map(row => {
             const rowData = {};
             row.forEach((cell, i) => {
-              let value = cell.formattedValue;
-              if (typeof value === "string") {
-                const cleaned = value.replace(/,/g, '').trim();
-                const parsed = parseFloat(cleaned);
-                rowData[columns[i]] = isNaN(parsed) ? value : parsed;
+              const value = cell.value;
+              if (value === null || value === undefined) {
+                rowData[columns[i]] = null;
               } else {
                 rowData[columns[i]] = value;
               }
