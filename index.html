@@ -26,7 +26,7 @@
 
       function logToUI(msg) {
         if (responseDiv) {
-          responseDiv.innerText += "\\n" + msg;
+          responseDiv.innerText += "\n" + msg;
         }
         console.log(msg);
       }
@@ -61,25 +61,30 @@
           logToUI("📄 Using worksheet: " + worksheet.name);
 
           const summaryData = await worksheet.getSummaryDataAsync();
-          const columns = summaryData.columns.map(col => col.fieldName || col.alias || `Col${i}`);
+          const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
 
           const structuredData = summaryData.data.map(row => {
-          const rowData = {};
+            const rowData = {};
             row.forEach((cell, i) => {
-            let value = cell.formattedValue;
-            // Try parsing as number if it's a number-like string
-              const parsed = parseFloat(value.toString().replace(/,/g, ''));
-              rowData[columns[i]] = isNaN(parsed) ? value : parsed;
-              });
-            return rowData;
+              let value = cell.formattedValue;
+              if (typeof value === "string") {
+                const cleaned = value.replace(/,/g, '').trim();
+                const parsed = parseFloat(cleaned);
+                rowData[columns[i]] = isNaN(parsed) ? value : parsed;
+              } else {
+                rowData[columns[i]] = value;
+              }
             });
+            return rowData;
+          });
 
           const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               query: query,
-              worksheet_data: structuredData
+              worksheet_data: structuredData,
+              columns: columns
             })
           });
 
@@ -87,7 +92,6 @@
           responseDiv.innerText = result.response || "❌ GPT returned no response.";
         } catch (err) {
           console.error("❌ Caught error:", err);
-          logToUI("❌ Error: " + err.message);
           responseDiv.innerText = "❌ Something went wrong: " + err.message;
         }
       });
