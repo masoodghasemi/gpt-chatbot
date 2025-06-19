@@ -13,7 +13,7 @@
 <body>
   <div id="chat-container">
     <h2>Ask GPT</h2>
-    <input type="text" id="query-input" placeholder="e.g., What’s the trend for Sales?" />
+    <input type="text" id="query-input" placeholder="Ask a question about your data..." />
     <button id="ask-button">Ask GPT</button>
     <div id="response">Awaiting input...</div>
   </div>
@@ -31,10 +31,10 @@
         console.log(msg);
       }
 
-      logToUI("✅ Extension loaded. Waiting for user input...");
+      logToUI("✅ GPT Extension loaded");
 
       if (typeof tableau === "undefined") {
-        logToUI("❌ Tableau Extensions API is not available.");
+        logToUI("❌ Tableau Extensions API not available");
         return;
       }
 
@@ -46,32 +46,19 @@
         }
 
         responseDiv.innerText = "Thinking...";
-        logToUI("📥 Query: " + query);
 
         try {
           await tableau.extensions.initializeAsync();
-          logToUI("✅ Tableau extension initialized");
-
-          const worksheets = tableau.extensions.dashboardContent.dashboard.worksheets;
-          if (!worksheets || worksheets.length === 0) {
-            throw new Error("No worksheets found in dashboard.");
-          }
-
-          const worksheet = worksheets[0];
-          logToUI("📄 Using worksheet: " + worksheet.name);
-
+          const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
           const summaryData = await worksheet.getSummaryDataAsync();
+
           const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
 
           const structuredData = summaryData.data.map(row => {
             const rowData = {};
             row.forEach((cell, i) => {
               const value = cell.value;
-              if (value === null || value === undefined) {
-                rowData[columns[i]] = null;
-              } else {
-                rowData[columns[i]] = value;
-              }
+              rowData[columns[i]] = value === undefined ? null : value;
             });
             return rowData;
           });
@@ -89,8 +76,8 @@
           const result = await res.json();
           responseDiv.innerText = result.response || "❌ GPT returned no response.";
         } catch (err) {
-          console.error("❌ Caught error:", err);
-          responseDiv.innerText = "❌ Something went wrong: " + err.message;
+          console.error("❌ Error:", err);
+          responseDiv.innerText = "❌ Failed to fetch response: " + err.message;
         }
       });
     });
