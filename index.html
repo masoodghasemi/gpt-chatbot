@@ -45,36 +45,35 @@
           return;
         }
 
-        responseDiv.innerText = "⏳ Thinking...";
+        responseDiv.innerText = "Thinking...";
 
         try {
           await tableau.extensions.initializeAsync();
           const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
           const summaryData = await worksheet.getSummaryDataAsync();
-
           const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
 
           const structuredData = summaryData.data.map(row => {
             const rowData = {};
             row.forEach((cell, i) => {
-              const value = cell.value;
-              rowData[columns[i]] = value === undefined ? null : value;
+              let val = cell.formattedValue;
+              if (typeof val === 'string') {
+                const parsed = parseFloat(val.replace(/,/g, ""));
+                val = isNaN(parsed) ? val : parsed;
+              }
+              rowData[columns[i]] = val;
             });
             return rowData;
           });
 
-          const payload = {
-            query: query,
-            worksheet_data: structuredData,
-            columns: columns
-          };
-
-          console.log("📤 Sending to GPT Proxy:", payload);
-
           const res = await fetch("https://gpt-proxy-5hrz.onrender.com/ask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+              query: query,
+              worksheet_data: structuredData,
+              columns: columns
+            })
           });
 
           const result = await res.json();
