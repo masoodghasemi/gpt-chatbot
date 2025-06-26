@@ -25,16 +25,12 @@
       const responseDiv = document.getElementById("response");
 
       function logToUI(msg) {
-        if (responseDiv) {
-          responseDiv.innerText += "\n" + msg;
-        }
+        responseDiv.innerText += "\n" + msg;
         console.log(msg);
       }
 
-      logToUI("✅ GPT Extension loaded");
-
       if (typeof tableau === "undefined") {
-        logToUI("❌ Tableau Extensions API not available");
+        logToUI("❌ Tableau Extensions API not available.");
         return;
       }
 
@@ -45,23 +41,25 @@
           return;
         }
 
-        responseDiv.innerText = "Thinking...";
+        responseDiv.innerText = "⏳ Thinking...";
 
         try {
           await tableau.extensions.initializeAsync();
           const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
-          const summaryData = await worksheet.getSummaryDataAsync();
-          const columns = summaryData.columns.map((col, i) => col.fieldName || col.alias || `Col${i}`);
 
-          const structuredData = summaryData.data.map(row => {
+          const dataTable = await worksheet.getUnderlyingDataAsync({ maxRows: 0 });
+          const columns = dataTable.columns.map(col => col.fieldName || col.alias || `Col${col.index}`);
+
+          const data = dataTable.data.map(row => {
             const rowData = {};
             row.forEach((cell, i) => {
-              let val = cell.formattedValue;
-              if (typeof val === 'string') {
-                const parsed = parseFloat(val.replace(/,/g, ""));
-                val = isNaN(parsed) ? val : parsed;
+              let raw = cell.value ?? cell.formattedValue;
+              if (typeof raw === "string") {
+                let clean = parseFloat(raw.replace(/,/g, ""));
+                rowData[columns[i]] = isNaN(clean) ? raw : clean;
+              } else {
+                rowData[columns[i]] = raw;
               }
-              rowData[columns[i]] = val;
             });
             return rowData;
           });
@@ -71,7 +69,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               query: query,
-              worksheet_data: structuredData,
+              worksheet_data: data,
               columns: columns
             })
           });
@@ -80,7 +78,7 @@
           responseDiv.innerText = result.response || "❌ GPT returned no response.";
         } catch (err) {
           console.error("❌ Error:", err);
-          responseDiv.innerText = "❌ Failed to fetch response: " + err.message;
+          responseDiv.innerText = "❌ Failed: " + err.message;
         }
       });
     });
