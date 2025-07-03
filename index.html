@@ -47,7 +47,7 @@
           await tableau.extensions.initializeAsync();
           const worksheet = tableau.extensions.dashboardContent.dashboard.worksheets[0];
 
-          const dataTable = await worksheet.getUnderlyingDataAsync({ maxRows: 0 });
+          const dataTable = await worksheet.getSummaryDataAsync({ ignoreSelection: true });
           const columns = dataTable.columns.map(col => col.fieldName || col.alias || `Col${col.index}`);
 
           const data = dataTable.data.map(row => {
